@@ -1,0 +1,34 @@
+{
+  "name": "tradingview-udf-peatio-node",
+  "version": "0.1.0",
+  "description": "Sample implementation of TradingView Charting Library UDF-compatible data source for Peatio exchange",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bergusman/tradingview-udf-peatio-node.git"
+  },
+  "author": "Vitaly Berg <bergusman@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bergusman/tradingview-udf-peatio-node/issues"
+  },
+  "homepage": "https://github.com/bergusman/tradingview-udf-peatio-node#readme",
+  "keywords": [
+    "udf",
+    "tradingview",
+    "crypto",
+    "peatio",
+    "exchange",
+    "api"
+  ],
+  "dependencies": {
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "morgan": "^1.9.0",
+    "request": "^2.88.0"
+  }
+}
