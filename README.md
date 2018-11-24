@@ -11,7 +11,7 @@ $ npm start
 
 ## Links
 
-* [Peatio REST API](https://github.com/peatio-exchange/peatio-official-api-docs)
+* [Peatio REST API](https://github.com/rubykube/peatio/blob/master/docs/api/member_api_v2.md)
 * [TradingView Charting Library](https://www.tradingview.com/HTML5-stock-forex-bitcoin-charting-library/)
 * [TradingView Charting Library Demo](https://charting-library.tradingview.com/)
 * [TradingView GitHub](https://github.com/tradingview)
