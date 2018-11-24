@@ -18,7 +18,6 @@ module.exports = class Searcher {
             if (exchange.length > 0 && exchange != symbol.exchange) {
                 continue
             }
-            
             if (symbol.symbol.toUpperCase().indexOf(query) >= 0) {
                 result.push(symbol)
             }

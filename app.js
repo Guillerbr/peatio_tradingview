@@ -2,10 +2,10 @@ const express = require('express')
 const app = express()
 
 const morgan = require('morgan')
-app.use(morgan('tiny'))
-
 const cors = require('cors')
-app.use(cors())
+
+app.use(morgan('tiny'))
+app.use(cors({credentials: true, origin: true}))
 
 const PeatioUtils = require('./peatio/utils')
 const PeatioAPI = require('./peatio/api')
@@ -41,38 +41,29 @@ const RESOLUTIONS_INTERVALS_MAP = {
 
 function convertSymbolToSearch(symbol) {
     return {
-        symbol: symbol.symbol,
-        full_name: symbol.symbol,
-        description: symbol.baseAsset + ' / ' + symbol.quoteAsset,
-        ticker: symbol.symbol,
-        exchange: 'PEATIO',
-        type: SEPARATE_BY_QUOTE ? symbol.quoteAsset.toLowerCase() : 'crypto'
+        symbol: symbol.id.toUpperCase(),
+        full_name: symbol.id.toUpperCase(),
+        description: symbol.ask_unit.toUpperCase() + ' / ' + symbol.bid_unit.toUpperCase(),
+        ticker: symbol.id.toUpperCase(),
+        exchange: 'STOCK',
+        type: SEPARATE_BY_QUOTE ? symbol.bid_unit.toLowerCase() : 'crypto'
     }
 }
 
 function convertSymbolToResolve(symbol) {
-    function pricescale(symbol) {
-        for (let filter of symbol.filters) {
-            if (filter.filterType == 'PRICE_FILTER') {
-                return Math.round(1 / parseFloat(filter.tickSize))
-            }
-        }
-        return 1
-    }
-
     return {
-        name: symbol.symbol,
-        ticker: symbol.symbol,
-        description: `${symbol.baseAsset}/${symbol.quoteAsset}`,
-        type: SEPARATE_BY_QUOTE ? symbol.quoteAsset.toLowerCase() : 'crypto',
+        name: symbol.id.toUpperCase(),
+        ticker: symbol.id.toUpperCase(),
+        description: `${symbol.ask_unit.toUpperCase()}/${symbol.bid_unit.toUpperCase()}`,
+        type: SEPARATE_BY_QUOTE ? symbol.bid_unit.toLowerCase() : 'crypto',
         session: '24x7',
-        exchange: 'PEATIO',
-        listed_exchange: 'PEATIO',
-        timezone: 'Etc/UTC',
+        exchange: 'STOCK',
+        listed_exchange: 'STOCK',
+        timezone: 'Asia/Singapore',
         has_intraday: true,
         has_daily: true,
         has_weekly_and_monthly: true,
-        pricescale: pricescale(symbol),
+        pricescale: Math.pow(10, symbol.bid_precision),
         minmovement: 1,
         minmov: 1,
         minmovement2: 0,
@@ -83,7 +74,7 @@ function convertSymbolToResolve(symbol) {
 function convertKlinesToBars(klines) {
     return {
         s: 'ok',
-        t: klines.map(b => Math.floor(b[0] / 1000)),
+        t: klines.map(b => parseFloat(b[0])),
         c: klines.map(b => parseFloat(b[4])),
         o: klines.map(b => parseFloat(b[1])),
         h: klines.map(b => parseFloat(b[2])),
@@ -95,10 +86,11 @@ function convertKlinesToBars(klines) {
 function resolve(ticker) {
     const comps = ticker.split(':')
     const exchange = (comps.length > 1 ? comps[0] : '').toUpperCase()
-    const symbol = (comps.length > 1 ? comps[1] : ticker).toUpperCase()
+    const symbol = (comps.length > 1 ? comps[1] : ticker)
+	console.log(symbol)
 
     for (let item of symbols) {
-        if (item.symbol == symbol && (exchange.length == 0 || exchange == 'PEATIO')) {
+        if (item.id == symbol.toLowerCase() && (exchange.length == 0 || exchange == 'STOCK')) {
             return item
         }
     }
@@ -128,7 +120,7 @@ app.get('/config', (req, res) => {
         supports_time: true,
         exchanges: [
             {
-                value: 'PEATIO',
+                value: 'STOCK',
                 name: 'Peatio',
                 desc: ''
             }
@@ -157,6 +149,19 @@ app.get('/symbols', (req, res) => {
     res.send(convertSymbolToResolve(symbol))
 })
 
+app.get('/quotes', (req, res) => {
+    if (!req.query.symbols) {
+        return res.status(400).send({ s: 'error', errmsg: 'Need symbols in query' })
+    }
+
+    const symbols = resolve(req.query.symbols)
+    if (!symbols) {
+        return res.status(404).send({ s: 'no_data' })
+    }
+
+    res.send(convertSymbolToResolve(symbols))
+})
+
 app.get('/search', (req, res) => {
     res.send(searcher.search(
         req.query.query,
@@ -177,9 +182,6 @@ app.get('/history', (req, res) => {
         return res.status(400).send({s: 'error', errmsg: 'Need to in query'})
     }
 
-    from *= 1000
-    to *= 1000
-
     if (!req.query.symbol) {
         return res.status(400).send({s: 'error', errmsg: 'Need symbol in query'})
     }
@@ -188,7 +190,8 @@ app.get('/history', (req, res) => {
         return res.status(400).send({s: 'error', errmsg: 'Need resolution in query'})
     }
 
-    const interval = RESOLUTIONS_INTERVALS_MAP[req.query.resolution]
+    const interval = req.query.resolution
+	const symbol = req.query.symbol.toLowerCase()
     if (!interval) {
         return res.status(400).send({s: 'error', errmsg: 'Unsupported resolution'})
     }
@@ -211,7 +214,7 @@ app.get('/history', (req, res) => {
     }
 
     function getKlines(from, to) {
-        peatio.klines(req.query.symbol, interval, from, to, 500).then(klines => {
+        peatio.klines(symbol, interval, from, to, 500).then(klines => {
             totalKlines = totalKlines.concat(klines)
             //console.log(klines.length)
     
@@ -232,7 +235,7 @@ app.get('/history', (req, res) => {
 
 app.get('/time', (req, res) => {
     peatio.time().then(json => {
-        res.send(Math.floor(json.serverTime / 1000) + '')
+        res.send(Math.floor(json.serverTime) + '')
     }).catch(err => {
         console.error(err)
         res.status(500).send()
@@ -245,3 +248,13 @@ function listen() {
         console.log(`Listening on port ${port}\n`)
     })
 }
+
+peatio.exchangeInfo().then(info => {
+    console.log(`Load ${info.length} symbols`)
+    symbols = info
+    searcher = new Searcher(info.map(convertSymbolToSearch))
+    listen()
+}).catch(err => {
+    console.error(err)
+    process.exit(1)
+})
