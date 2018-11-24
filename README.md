@@ -3,7 +3,7 @@
 Sample implementation of server-side UDF-compatible data source for [Peatio exchange](https://www.peatio.com/) for [TradingView](https://www.tradingview.com/) [Charting Library](https://www.tradingview.com/HTML5-stock-forex-bitcoin-charting-library/).
 
 
-First change api on backend peatio
+## First change api on backend peatio
 
 app/api/api_v2/tools.rb
 
@@ -47,6 +47,9 @@ end
 $ npm install
 $ npm start
 ```
+
+## Image Demo:
+![alt text](https://raw.githubusercontent.com/Thedabest/peatio_tradingview/master/img/demo.jpg)
 
 ## Links
 
