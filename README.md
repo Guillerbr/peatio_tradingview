@@ -51,7 +51,7 @@ $ npm start
 ## Image Demo:
 ![alt text](https://raw.githubusercontent.com/Thedabest/peatio_tradingview/master/img/demo.jpg)
  it is my trading-ui if you want it contact me :)
-  - Telegram: https://t.me/no_public_cc
+  - Telegram: https://t.me/huuhait
   - Facebook: https://www.facebook.com/huuhait
 
 ## Links
